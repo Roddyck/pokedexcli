@@ -1,13 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
-	"bufio"
+
+	"github.com/Roddyck/pokedexcli/internal/pokeapi"
 )
 
-func startRepl() {
+type config struct {
+	pokeapiClient   pokeapi.Client
+	nextLocationUrl *string
+	prevLocationUrl *string
+}
+
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -16,14 +24,14 @@ func startRepl() {
 
 		command := words[0]
 		if command, ok := getCommands()[command]; ok {
-			err := command.callback()
+			err := command.callback(cfg)
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
 			fmt.Println("Unknown command")
 		}
-		
+
 	}
 
 }
@@ -31,7 +39,7 @@ func startRepl() {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(cfg *config) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -40,6 +48,16 @@ func getCommands() map[string]cliCommand {
 			name:        "help",
 			description: "Display a help message",
 			callback:    commandHelp,
+		},
+		"map": {
+			name: "map",
+			description: "Get next page of locations",
+			callback: commandMapf,
+		},
+		"mapb": {
+			name: "mapb",
+			description: "Get previous page of locations",
+			callback: commandMapb,
 		},
 		"exit": {
 			name:        "exit",
