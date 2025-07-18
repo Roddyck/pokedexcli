@@ -19,8 +19,8 @@ func commandHelp(cfg *config, args ...string) error {
 
 	message += "Welcome to the Pokedex!\nUsage:\n"
 
-	for command, commandInfo := range getCommands() {
-		message += fmt.Sprintf("  %s - %s\n", command, commandInfo.description)
+	for _, commandInfo := range getCommands() {
+		message += fmt.Sprintf("  %s - %s\n", commandInfo.name, commandInfo.description)
 	}
 
 	fmt.Println(message)
@@ -135,6 +135,15 @@ func commandInspect(cfg *config, args ...string) error {
 		fmt.Println(" -", typeInfo.Type.Name)
 	}
 	
+	return nil
+}
+
+func commandPokedex(cfg *config, args ...string) error {
+	fmt.Println("Your Pokedex:")
+	for name := range cfg.caughtPokemon {
+		fmt.Println(" -", name)
+	}
+
 	return nil
 }
 
