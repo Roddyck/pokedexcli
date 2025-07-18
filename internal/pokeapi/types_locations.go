@@ -1,12 +1,5 @@
 package pokeapi
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-)
-
 type ResponseLocations struct {
 	Count    int     `json:"count"`
 	Next     *string `json:"next"`
@@ -17,45 +10,55 @@ type ResponseLocations struct {
 	} `json:"results"`
 }
 
-func (c *Client) ListLocations(pageUrl *string) (ResponseLocations, error) {
-	url := baseURL + "/location-area/"
-	if pageUrl != nil {
-		url = *pageUrl
-	}
-
-	if val, ok := c.cache.Get(url); ok {
-		locationsResp := ResponseLocations{}
-		err := json.Unmarshal(val, &locationsResp)
-		if err != nil {
-			return ResponseLocations{}, fmt.Errorf("error unmarshaling data: %w", err)
-		}
-
-		return locationsResp, nil
-	}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return ResponseLocations{}, fmt.Errorf("error creating request: %w", err)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return ResponseLocations{}, fmt.Errorf("error making request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ResponseLocations{}, fmt.Errorf("error reading data: %w", err)
-	}
-
-	locationsResp := ResponseLocations{}
-	err = json.Unmarshal(data, &locationsResp)
-	if err != nil {
-		return ResponseLocations{}, fmt.Errorf("error unmarshaling data: %w", err)
-	}
-
-	c.cache.Add(url, data)
-
-	return locationsResp, nil
+type Location struct {
+	EncounterMethodRates []struct {
+		EncounterMethod struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"encounter_method"`
+		VersionDetails []struct {
+			Rate    int `json:"rate"`
+			Version struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"version"`
+		} `json:"version_details"`
+	} `json:"encounter_method_rates"`
+	GameIndex int `json:"game_index"`
+	ID        int `json:"id"`
+	Location  struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"location"`
+	Name  string `json:"name"`
+	Names []struct {
+		Language struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"language"`
+		Name string `json:"name"`
+	} `json:"names"`
+	PokemonEncounters []struct {
+		Pokemon struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"pokemon"`
+		VersionDetails []struct {
+			EncounterDetails []struct {
+				Chance          int   `json:"chance"`
+				ConditionValues []any `json:"condition_values"`
+				MaxLevel        int   `json:"max_level"`
+				Method          struct {
+					Name string `json:"name"`
+					URL  string `json:"url"`
+				} `json:"method"`
+				MinLevel int `json:"min_level"`
+			} `json:"encounter_details"`
+			MaxChance int `json:"max_chance"`
+			Version   struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"version"`
+		} `json:"version_details"`
+	} `json:"pokemon_encounters"`
 }
